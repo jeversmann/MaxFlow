@@ -31,6 +31,10 @@ public class DropZone {
             }
             in.useDelimiter(delim);
             MaxFlowGraph zone = new MaxFlowGraph();
+            //System.out.printf("Test case: %d\n", testCount);
+            //for(int[] row: field) {
+            //    System.out.println(Arrays.toString(row));
+            //}
             for(int y = 0; y < h; y++) {
                 for(int x = 0; x < w; x++) {
                     int node = field[y][x];
@@ -50,6 +54,7 @@ public class DropZone {
                     }
                 }
             }
+            //System.out.println(zone);
             System.out.println(zone.getFlow(0, -1));
         }
     }

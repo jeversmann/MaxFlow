@@ -11,7 +11,7 @@ sample: dropzone
 	diff output/sample.out output/sample.ok
 
 judge: dropzone
-	-rm output/judges.out>
+	-rm output/judges.out
 	java -cp build DropZone < input/judges.in >> output/judges.out
 	diff output/judges.out output/judges.ok
 
