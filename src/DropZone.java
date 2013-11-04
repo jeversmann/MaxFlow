@@ -50,7 +50,7 @@ public class DropZone {
                     }
                 }
             }
-            System.out.printf("Case %d: %d\n", testCount, zone.getFlow(0, -1));
+            System.out.println(zone.getFlow(0, -1));
         }
     }
 }
