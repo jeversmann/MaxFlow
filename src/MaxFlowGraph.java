@@ -8,7 +8,7 @@ public class MaxFlowGraph {
         myNodes = new HashMap<Integer,Node>();
     }
 
-    public boolean addEdge(int left, int right, int capacity) {
+    public void addEdge(int left, int right, int capacity) {
         Node lNode;
         Node rNode;
         if(myNodes.containsKey(left)) {
@@ -21,70 +21,72 @@ public class MaxFlowGraph {
         } else {
             rNode = new Node(right);
         }
-        boolean resp = rNode.addEdge(left, capacity) &
-            lNode.addEdge(right, capacity);
+        //Edge insertion is no longer symmetric
+        lNode.addEdge(right, capacity);
         myNodes.put(left, lNode);
         myNodes.put(right, rNode);
-        return resp;
     }
 
     public int getFlow(int left, int right) {
         if(!myNodes.containsKey(left) || !myNodes.containsKey(right)) {
             return -1;
         }
-        List<Node.Edge> paths = getPath(left, right, new LinkedList<Node.Edge>());
+        List<Node.Edge> paths = getPath(left, right);
         int flow = 0;
         while(paths.size() > 0) {
             int min_capacity = Integer.MAX_VALUE;
             for(Node.Edge edge: paths) {
-                //System.out.print(edge.dest + " ");
                 if(min_capacity > edge.capacity - edge.flow) {
                     min_capacity = edge.capacity - edge.flow;
                 }
             }
-            //System.out.println();
             if(min_capacity > 0) {
                 for(Node.Edge edge : paths) {
                     edge.flow += min_capacity;
                 }
             }
             flow += min_capacity;
-            paths = getPath(left, right, new LinkedList<Node.Edge>());
+            paths = getPath(left, right);
+        }
+        for(Node n: myNodes.values()) {
+            n.clear();
         }
         return flow;
     }
 
-    private List<Node.Edge> getPath(int left, int right, List<Node.Edge> previous) {
+    private List<Node.Edge> getPath(int left, int right) {
+        List<Node.Edge> start = new LinkedList<Node.Edge>();
         if(!myNodes.containsKey(left) || !myNodes.containsKey(right)) {
-            return previous;
+            return start;
         }
-        Node lNode = myNodes.get(left);
-        for(Integer mid: lNode.getDestinations()) {
-            Node.Edge next = lNode.getEdge(mid);
-            if(next.capacity - next.flow == 0) {
-                continue;
-            }
-            if(mid == right) {
-                previous.add(next);
-                break;
+        Queue<List<Node.Edge>> state = new LinkedList<List<Node.Edge>>();
+        state.add(start);
+        HashMap<Integer,Boolean> used = new HashMap<Integer, Boolean>();
+        while(!state.isEmpty()) {
+            List<Node.Edge> previous = state.remove();
+            Node lNode;
+            if(previous.isEmpty()) {
+                lNode = myNodes.get(left);
+                used.put(left,true);
             } else {
-                boolean unused = true;
-                for(Node.Edge e : previous) {
-                    if(e.dest == mid || e.prev == mid) {
-                        unused = false;
-                    }
+                lNode = myNodes.get(previous.get(previous.size() - 1).dest);
+            }
+            for(Node.Edge next: lNode.getEdges()) {
+                if(next.capacity - next.flow == 0) {
+                    continue;
                 }
-                if(unused) {
+                if(next.dest == right) {
+                    previous.add(next);
+                    return previous;
+                } else if(!used.containsKey(next.dest)) {
                     List<Node.Edge> prevClone = new LinkedList<Node.Edge>(previous);
                     prevClone.add(next);
-                    List<Node.Edge> resulting = getPath(mid, right, prevClone);
-                    if(resulting.get(resulting.size() - 1).dest == right) {
-                        return resulting;
-                    }
+                    state.add(prevClone);
+                    used.put(next.dest,true);
                 }
             }
         }
-        return previous;
+        return start;
     }
 
     public String toString() {
@@ -111,41 +113,36 @@ public class MaxFlowGraph {
             }
         }
 
-        private HashMap<Integer,Edge> myEdges;
+        private Set<Edge> myEdges;
         private int index;
 
         public Node(int i) {
             index = i;
-            myEdges = new HashMap<Integer,Edge>();
+            myEdges = new HashSet<Edge>();
         }
 
-        public boolean addEdge(int dest, int capacity) {
-            if(myEdges.containsKey(dest)) {
-                return false;
-            } else {
-                myEdges.put(dest, new Edge(capacity, dest, index));
-                return true;
+        public void addEdge(int dest, int capacity) {
+            myEdges.add(new Edge(capacity, dest, index));
+        }
+
+        public Collection<Edge> getEdges() {
+            Collection<Edge> resp = new LinkedList<Edge>();
+            for(Edge e: myEdges) {
+                resp.add(e);
             }
-        }
-
-        public Edge getEdge(int dest) {
-            return myEdges.get(dest);
-        }
-
-        public Collection<Integer> getDestinations() {
-            return myEdges.keySet();
+            return resp;
         }
 
         public void clear() {
-            for(Edge e: myEdges.values()) {
+            for(Edge e: myEdges) {
                 e.flow = 0;
             }
         }
 
         public String toString() {
             String resp = String.format("%d: [", index);
-            for(Integer dest: myEdges.keySet()) {
-                resp += " " + dest;
+            for(Edge e: myEdges) {
+                resp += " " + e.dest;
             }
             return resp + "]\n";
         }
