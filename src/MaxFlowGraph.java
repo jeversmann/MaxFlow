@@ -21,15 +21,25 @@ public class MaxFlowGraph {
         } else {
             rNode = new Node(right);
         }
-        return rNode.addEdge(left, weight) & lNode.addEdge(right, weight);
+        boolean resp = rNode.addEdge(left, weight) & lNode.addEdge(right, weight);
+        adjacency.put(left, lNode);
+        adjacency.put(right, rNode);
+        return resp;
     }
 
     public int getFlow(int left, int right) {
         if(!adjacency.containsKey(left) || !adjacency.containsKey(right)) {
             return -1;
         }
-
+        // TODO The actual hard stuff goes here
         return 0;
+    }
+
+
+    public void print() {
+        for(Node n: adjacency.values()) {
+            System.out.println(n);
+        }
     }
 
     private class Node {
@@ -49,6 +59,14 @@ public class MaxFlowGraph {
                 myEdges.put(dest, weight);
                 return true;
             }
+        }
+
+        public String toString() {
+            String resp = String.format("%d: [", index);
+            for(Integer dest: myEdges.keySet()) {
+                resp += " " + dest;
+            }
+            return resp + "]";
         }
 
     }
